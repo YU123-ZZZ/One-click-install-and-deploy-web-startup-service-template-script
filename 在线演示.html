@@ -1,0 +1,682 @@
+<!doctype html>
+<!--
+  版权所有 (c) 2026
+  作者: https://github.com/YU123-ZZZ
+  吾爱破解: https://www.52pojie.cn/home.php?mod=space&uid=2394304
+  本页面仅提供浏览器模拟，不执行系统命令。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="author" content="YU123-ZZZ">
+  <meta name="copyright" content="Copyright (c) 2026 YU123-ZZZ">
+  <title>一键安装部署启动服务模板 v4.2 - 模拟环境</title>
+  <style>
+    :root {
+      --desktop: #101214;
+      --frame: #202124;
+      --frame-line: #34363a;
+      --terminal: #0c0c0c;
+      --normal: #f2f2f2;
+      --cyan: #3bdbff;
+      --green: #55e055;
+      --yellow: #fff06a;
+      --red: #ff6b6b;
+      --dim: #a7a7a7;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--desktop);
+      color: var(--normal);
+      font-family: "Cascadia Mono", "Microsoft YaHei UI", Consolas, monospace;
+    }
+
+    button, input { font: inherit; }
+
+    .desktop {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .window {
+      width: min(100%, 1000px);
+      overflow: hidden;
+      border: 1px solid var(--frame-line);
+      border-radius: 9px;
+      background: var(--terminal);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .48);
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      min-height: 42px;
+      background: var(--frame);
+      border-bottom: 1px solid #17181a;
+      color: #f4f4f4;
+      user-select: none;
+    }
+
+    .app-icon {
+      display: grid;
+      width: 46px;
+      align-self: stretch;
+      place-items: center;
+      background: #171819;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .title {
+      min-width: 0;
+      padding: 0 14px;
+      overflow: hidden;
+      flex: 1;
+      font: 12px/1.2 "Microsoft YaHei UI", sans-serif;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .simulated {
+      margin-right: 12px;
+      color: #c8c8c8;
+      font: 11px/1 "Microsoft YaHei UI", sans-serif;
+      white-space: nowrap;
+    }
+
+    .window-controls { display: flex; align-self: stretch; }
+    .window-control {
+      display: grid;
+      width: 46px;
+      border: 0;
+      background: transparent;
+      color: #dedede;
+      place-items: center;
+      cursor: default;
+    }
+    .window-control:hover { background: #323337; }
+    .window-control.close:hover { background: #c42b1c; color: #fff; }
+
+    .terminal-viewport {
+      min-height: 630px;
+      max-height: calc(100vh - 92px);
+      overflow: auto;
+      background: var(--terminal);
+      scrollbar-color: #555 var(--terminal);
+    }
+
+    .terminal {
+      width: 92ch;
+      min-height: 34em;
+      padding: 12px 14px 26px;
+      font-size: 15px;
+      line-height: 1.44;
+      letter-spacing: 0;
+    }
+
+    .line {
+      min-height: 1.44em;
+      margin: 0;
+      white-space: pre;
+    }
+
+    .normal { color: var(--normal); }
+    .title-color { color: var(--cyan); }
+    .success { color: var(--green); }
+    .warning { color: var(--yellow); }
+    .error { color: var(--red); }
+    .dim { color: var(--dim); }
+
+    .input-line {
+      display: flex;
+      width: 92ch;
+      min-height: 1.44em;
+      align-items: baseline;
+      color: var(--normal);
+      white-space: pre;
+    }
+
+    .command-input {
+      width: min(42ch, 100%);
+      min-width: 4ch;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: inherit;
+      caret-color: #fff;
+      font: inherit;
+      line-height: inherit;
+    }
+
+    .command-input:disabled { opacity: 1; }
+
+    .cursor {
+      display: inline-block;
+      width: .62em;
+      height: 1.05em;
+      margin-left: 2px;
+      translate: 0 .18em;
+      background: #cfcfcf;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    .terminal.busy .cursor { display: none; }
+
+    .hintbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 34px;
+      padding: 0 14px;
+      border-top: 1px solid #252525;
+      background: #161616;
+      color: #aaa;
+      font: 11px/1.2 "Microsoft YaHei UI", sans-serif;
+    }
+
+    .hintbar strong { color: var(--yellow); font-weight: 500; }
+
+    .support-link {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--cyan);
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .support-link:hover, .support-link:focus-visible { color: #fff; text-decoration: underline; }
+
+    .support-modal {
+      position: fixed;
+      z-index: 2;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, .76);
+    }
+
+    .support-modal[hidden] { display: none; }
+
+    .support-card {
+      width: min(92vw, 720px);
+      padding: 16px;
+      border: 1px solid #555;
+      background: #101010;
+      box-shadow: 0 20px 70px rgba(0, 0, 0, .65);
+    }
+
+    .support-card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; color: var(--cyan); font-size: 14px; }
+    .support-card button { border: 0; background: transparent; color: #ddd; cursor: pointer; font: inherit; }
+    .support-card button:hover, .support-card button:focus-visible { color: var(--red); }
+    .support-card img { display: block; width: 100%; max-height: 72vh; object-fit: contain; background: #000; }
+
+    @keyframes blink { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
+
+    @media (max-width: 720px) {
+      .desktop { padding: 0; place-items: stretch; }
+      .window { width: 100%; min-height: 100vh; border: 0; border-radius: 0; }
+      .terminal-viewport { min-height: calc(100vh - 76px); max-height: calc(100vh - 76px); }
+      .terminal { font-size: 13px; }
+      .simulated { display: none; }
+      .window-control { width: 40px; }
+      .window-control.minimize { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+  </style>
+</head>
+<body>
+  <main class="desktop">
+    <section class="window" aria-label="CMD 模拟环境">
+      <header class="titlebar">
+        <div class="app-icon" aria-hidden="true">C:\</div>
+        <div class="title">一键安装部署启动服务模板 v4.2</div>
+        <div class="simulated">浏览器模拟环境 · 不执行系统命令</div>
+        <div class="window-controls" aria-hidden="true">
+          <button class="window-control minimize" type="button" tabindex="-1">—</button>
+          <button class="window-control" type="button" tabindex="-1">□</button>
+          <button class="window-control close" type="button" tabindex="-1">×</button>
+        </div>
+      </header>
+
+      <div class="terminal-viewport" id="viewport">
+        <div class="terminal" id="terminal" role="application" aria-label="一键部署服务命令行模拟器">
+          <div id="screen" aria-live="polite"></div>
+          <form class="input-line" id="command-form" autocomplete="off">
+            <label id="prompt" for="command-input">请输入菜单编号: </label>
+            <input class="command-input" id="command-input" spellcheck="false" aria-describedby="input-help">
+            <span class="cursor" aria-hidden="true"></span>
+          </form>
+        </div>
+      </div>
+      <footer class="hintbar" id="input-help">
+        <span>输入菜单编号后按 Enter；操作方式与 CMD 脚本一致</span>
+        <button class="support-link" id="support-button" type="button">打赏支持</button>
+        <strong>所有结果均为模拟数据</strong>
+      </footer>
+    </section>
+
+    <div class="support-modal" id="support-modal" hidden role="dialog" aria-modal="true" aria-labelledby="support-title">
+      <div class="support-card">
+        <header><span id="support-title">打赏支持</span><button id="support-close" type="button" aria-label="关闭打赏二维码">关闭</button></header>
+        <img src="support-qrcode.png" alt="打赏二维码，支持支付宝和微信">
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 版权所有 (c) 2026 | 作者: https://github.com/YU123-ZZZ
+    // 吾爱破解: https://www.52pojie.cn/home.php?mod=space&uid=2394304
+    (() => {
+      const screen = document.querySelector('#screen');
+      const terminal = document.querySelector('#terminal');
+      const viewport = document.querySelector('#viewport');
+      const form = document.querySelector('#command-form');
+      const input = document.querySelector('#command-input');
+      const promptLabel = document.querySelector('#prompt');
+      const supportButton = document.querySelector('#support-button');
+      const supportModal = document.querySelector('#support-modal');
+      const supportClose = document.querySelector('#support-close');
+      const divider = '  ========================================================================================';
+      const defaults = {
+        projectName: '示例项目', defaultPort: 8080, serverCmd: 'java', serverArgs: '-jar',
+        extraArgs: '', programFile: 'app.jar', portArg: '--server.port=', java: 1, node: 0, git: 0
+      };
+      let config = loadConfig();
+      let currentMenu = 'main';
+      let promptMode = null;
+      let running = false;
+      let currentPort = null;
+      let currentPid = null;
+      let busy = false;
+
+      function loadConfig() {
+        try { return { ...defaults, ...JSON.parse(localStorage.getItem('cmd-demo-config') || '{}') }; }
+        catch { return { ...defaults }; }
+      }
+
+      function saveConfig() {
+        localStorage.setItem('cmd-demo-config', JSON.stringify(config));
+      }
+
+      function add(text = '', tone = 'normal') {
+        const line = document.createElement('div');
+        line.className = `line ${tone}`;
+        line.textContent = text;
+        screen.append(line);
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+
+      function clear() { screen.replaceChildren(); }
+
+      function setPrompt(text, mode = null) {
+        promptMode = mode;
+        promptLabel.textContent = text;
+        input.value = '';
+        input.disabled = false;
+        form.hidden = false;
+        terminal.classList.remove('busy');
+        requestAnimationFrame(() => input.focus());
+      }
+
+      function lockInput() {
+        input.disabled = true;
+        terminal.classList.add('busy');
+      }
+
+      function header(title) {
+        add('');
+        add(divider, 'title-color');
+        add(title, 'title-color');
+        add(divider, 'title-color');
+        add('');
+      }
+
+      function renderMain() {
+        currentMenu = 'main'; promptMode = null; clear();
+        header('                        一键安装部署启动服务模板 v4.2');
+        add('    [1] 一键部署启动                 [6] 端口管理');
+        add('    [2] 使用默认端口启动             [7] 环境安装');
+        add('    [3] 使用自定义端口启动           [8] 项目管理');
+        add('    [4] 停止服务                     [9] 系统信息');
+        add('    [5] 重启服务                     [0] 退出脚本');
+        add(''); add(divider, 'title-color'); add('');
+        if (running) {
+          add('  当前状态: 运行中', 'success');
+          add(`  项目名称: ${config.projectName}`);
+          add(`  运行端口: ${currentPort}`);
+          add(`  本机地址: http://localhost:${currentPort}`);
+          add(`  局域网地址: http://192.168.1.100:${currentPort}`);
+          add('  关闭当前管理窗口后, 服务会继续运行。');
+        } else {
+          add('  当前状态: 未运行', 'warning');
+          add(`  项目名称: ${config.projectName}`);
+          add(`  默认端口: ${config.defaultPort}`);
+          add('  项目目录: D:\\service-template\\');
+        }
+        add(''); add('  权限状态: 管理员（模拟）');
+        add('  提示: 当前为浏览器模拟环境, 不会安装软件、启动进程或修改防火墙。', 'dim');
+        add(''); setPrompt('请输入菜单编号: ');
+      }
+
+      function renderPortMenu() {
+        currentMenu = 'port'; clear();
+        header('  === 端口管理 ===');
+        add('    [1] 查看常用端口状态');
+        add('    [2] 检测指定端口');
+        add('    [3] 结束占用端口的进程');
+        add('    [4] 添加防火墙放行规则');
+        add('    [5] 删除防火墙放行规则');
+        add('    [0] 返回主菜单');
+        add(''); setPrompt('请输入菜单编号: ');
+      }
+
+      function renderEnvMenu() {
+        currentMenu = 'env'; clear();
+        header('  === 环境安装 ===');
+        add('    [1] 检查运行环境');
+        add('    [2] 安装 JDK');
+        add('    [3] 安装 Node.js');
+        add('    [4] 安装 Git');
+        add('    [5] 安装配置中需要的环境');
+        add('    [0] 返回主菜单');
+        add(''); setPrompt('请输入菜单编号: ');
+      }
+
+      function renderProjectMenu() {
+        currentMenu = 'project'; clear();
+        header('  === 项目管理 ===');
+        add('    [1] 检查项目文件');
+        add('    [2] 打开项目目录');
+        add('    [3] 查看当前配置');
+        add('    [4] 修改配置');
+        add('    [5] 删除环境配置');
+        add('    [0] 返回主菜单');
+        add(''); setPrompt('请输入菜单编号: ');
+      }
+
+      function renderModifyMenu() {
+        currentMenu = 'modify'; clear();
+        header('  === 修改配置 ===');
+        add(`    [1] 项目名称       [${config.projectName}]`);
+        add(`    [2] 默认端口       [${config.defaultPort}]`);
+        add(`    [3] 启动命令       [${config.serverCmd}]`);
+        add(`    [4] 命令前参数     [${config.serverArgs}]`);
+        add(`    [5] 启动附加参数   [${config.extraArgs}]`);
+        add(`    [6] 程序文件       [${config.programFile}]`);
+        add(`    [7] 需要 Java      [${config.java}]`);
+        add(`    [8] 需要 Node.js   [${config.node}]`);
+        add(`    [9] 需要 Git       [${config.git}]`);
+        add(`    [10] 端口参数      [${config.portArg}]`);
+        add('    [S] 保存并返回');
+        add('    [0] 取消并返回');
+        add(''); setPrompt('请输入要修改的编号: ');
+      }
+
+      function showEnvironment(returnMenu = 'env') {
+        clear(); header('  === 运行环境检查 ===');
+        add('  Java / JDK:'); add('    openjdk version "17.0.12"', 'success'); add('');
+        add('  Node.js:'); add('    v22.14.0', 'success'); add('');
+        add('  Git:'); add('    git version 2.50.1.windows.1', 'success'); add('');
+        add('  winget:'); add('    可用', 'success'); add('');
+        pause(returnMenu);
+      }
+
+      function pause(target = currentMenu) {
+        add('');
+        setPrompt('请按 Enter 键继续. . .', `pause:${target}`);
+      }
+
+      function validPort(value) {
+        return /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 65535;
+      }
+
+      function simulatedOccupied(port) {
+        return [3000, 8081, 8888].includes(Number(port)) || (running && Number(port) === Number(currentPort));
+      }
+
+      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+      async function deploy(port = config.defaultPort, auto = true) {
+        if (busy) return;
+        clear(); currentMenu = 'main'; busy = true; lockInput();
+        add(''); add('  === 一键部署启动 ===', 'title-color'); add('');
+        const step = async (message, tone = 'normal', delay = 360) => { add(message, tone); await wait(delay); };
+        await step('  [1/5] 正在检查运行环境...');
+        await step('  [完成] 运行环境已就绪。', 'success'); add('');
+        await step('  [2/5] 正在检查项目文件...');
+        await step(`  [存在] ${config.programFile}`, 'success'); add('');
+        await step('  [3/5] 正在检查端口...');
+        let selected = Number(port);
+        if (simulatedOccupied(selected)) {
+          if (!auto) { add(`  [错误] 端口 ${selected} 已被占用。`, 'error'); busy = false; pause('main'); return; }
+          while (simulatedOccupied(selected)) selected += 1;
+          await step(`  [完成] 默认端口已占用, 自动切换到 ${selected}。`, 'warning');
+        } else await step(`  [完成] 默认端口 ${selected} 可以使用。`, 'success');
+        add(''); await step('  [4/5] 正在启动服务...');
+        currentPort = selected;
+        currentPid = Math.floor(3200 + Math.random() * 6000);
+        running = true;
+        await step('  [完成] 服务已启动。', 'success');
+        await step(`  本机地址: http://localhost:${currentPort}`);
+        await step(`  局域网地址: http://192.168.1.100:${currentPort}`); add('');
+        await step('  [5/5] 正在打开浏览器...');
+        await step('  [完成] 部署启动完成。', 'success');
+        busy = false; pause('main');
+      }
+
+      async function installEnvironment(name, target = 'env') {
+        clear(); lockInput(); busy = true; add('');
+        add(`  正在通过 winget 安装 ${name}...`, 'title-color');
+        await wait(650); add('  正在下载软件包...', 'dim');
+        await wait(650); add(`  [完成] ${name} 安装完成。`, 'success');
+        add('  （模拟环境未对本机进行任何更改）', 'warning');
+        busy = false; pause(target);
+      }
+
+      function routePause(target) {
+        if (target === 'main') renderMain();
+        else if (target === 'port') renderPortMenu();
+        else if (target === 'env') renderEnvMenu();
+        else if (target === 'project') renderProjectMenu();
+        else if (target === 'modify') renderModifyMenu();
+      }
+
+      function handleMain(value) {
+        if (value === '1') deploy();
+        else if (value === '2') deploy(config.defaultPort, false);
+        else if (value === '3') { clear(); add(''); setPrompt('请输入端口 (1-65535): ', 'custom-port'); }
+        else if (value === '4') {
+          clear(); add('');
+          if (running) { running = false; currentPort = currentPid = null; add('[完成] 服务已停止。', 'success'); }
+          else add('[提示] 当前没有运行中的服务。', 'warning');
+          pause('main');
+        }
+        else if (value === '5') {
+          if (!running) deploy(config.defaultPort, false);
+          else { const port = currentPort; running = false; deploy(port, false); }
+        }
+        else if (value === '6') renderPortMenu();
+        else if (value === '7') renderEnvMenu();
+        else if (value === '8') renderProjectMenu();
+        else if (value === '9') {
+          clear(); header('  === 系统信息 ===');
+          add('  Microsoft Windows 11 [版本 10.0.26100.4652]'); add('');
+          add('  项目目录: D:\\service-template\\');
+          add('  局域网 IP: 192.168.1.100');
+          add('  管理员权限: 1（模拟）'); add('');
+          add('  Java 17 / Node.js 22 / Git 2.50 / winget 可用', 'success'); add('');
+          add(running ? `  服务状态: 运行中, 端口 ${currentPort}, PID ${currentPid}` : '  服务状态: 未运行', running ? 'success' : 'warning');
+          pause('main');
+        }
+        else if (value === '0') {
+          clear(); add(''); add('  模拟脚本已退出。', 'success');
+          add('  输入 R 并按 Enter 可重新进入主菜单。', 'dim');
+          setPrompt('D:\\service-template> ', 'exited');
+        }
+        else renderMain();
+      }
+
+      function handlePort(value) {
+        if (value === '0') renderMain();
+        else if (value === '1') {
+          clear(); add(''); add('  常用端口状态:', 'title-color'); add('');
+          [80, 443, 3000, 8080, 8888].forEach(port => {
+            add(simulatedOccupied(port) ? `  端口 ${port}: 占用中, PID ${port + 1200}` : `  端口 ${port}: 空闲`, simulatedOccupied(port) ? 'warning' : 'success');
+          }); pause('port');
+        }
+        else if (value === '2') { clear(); add(''); setPrompt('请输入要检测的端口: ', 'check-port'); }
+        else if (value === '3') { clear(); add(''); setPrompt('请输入要释放的端口: ', 'kill-port'); }
+        else if (value === '4') { clear(); add(''); setPrompt('请输入要放行的端口: ', 'firewall-open'); }
+        else if (value === '5') { clear(); add(''); setPrompt('请输入要删除放行规则的端口: ', 'firewall-close'); }
+        else renderPortMenu();
+      }
+
+      function handleEnv(value) {
+        if (value === '0') renderMain();
+        else if (value === '1') showEnvironment();
+        else if (value === '2') installEnvironment('JDK 17');
+        else if (value === '3') installEnvironment('Node.js LTS');
+        else if (value === '4') installEnvironment('Git');
+        else if (value === '5') installEnvironment('配置中需要的环境');
+        else renderEnvMenu();
+      }
+
+      function showConfig() {
+        clear(); header('  === 当前配置 ===');
+        add(`  项目名称:       ${config.projectName}`);
+        add('  项目目录:       D:\\service-template\\');
+        add(`  默认端口:       ${config.defaultPort}`);
+        add(`  启动命令:       ${config.serverCmd}`);
+        add(`  命令前参数:     ${config.serverArgs}`);
+        add(`  启动附加参数:   ${config.extraArgs}`);
+        add(`  程序文件:       ${config.programFile}`);
+        add(`  端口参数前缀:   ${config.portArg}`);
+        add(`  需要 Java:      ${config.java}`);
+        add(`  需要 Node.js:   ${config.node}`);
+        add(`  需要 Git:       ${config.git}`);
+        add(running ? `  服务状态:       运行中, 端口 ${currentPort}` : '  服务状态:       未运行', running ? 'success' : 'warning');
+        pause('project');
+      }
+
+      function handleProject(value) {
+        if (value === '0') renderMain();
+        else if (value === '1') {
+          clear(); add(''); add('  项目文件检查:', 'title-color'); add('');
+          add(`  [存在] ${config.programFile}`, 'success');
+          add('  [已生成] service.conf（模拟）', 'success');
+          add(running ? '  [存在] service.state（端口 + PID）' : '  [未生成] service.state', running ? 'success' : 'warning');
+          pause('project');
+        }
+        else if (value === '2') {
+          clear(); add(''); add('  [提示] 浏览器模拟环境不会打开本机目录。', 'warning'); pause('project');
+        }
+        else if (value === '3') showConfig();
+        else if (value === '4') renderModifyMenu();
+        else if (value === '5') {
+          clear(); add(''); add('  === 删除环境配置 ===', 'title-color'); add('');
+          add('  将删除浏览器保存的 service.conf 模拟配置，并恢复模板默认参数。');
+          add('  此操作不会停止当前正在运行的模拟服务。', 'warning'); add('');
+          setPrompt('确认删除环境配置? (Y/N): ', 'delete-config');
+        }
+        else renderProjectMenu();
+      }
+
+      function handleModify(value) {
+        const prompts = {
+          '1': ['请输入项目名称: ', 'set-project'], '2': ['请输入默认端口: ', 'set-default-port'],
+          '3': ['请输入启动命令: ', 'set-command'], '4': ['请输入命令前参数, 输入减号清空: ', 'set-args'],
+          '5': ['请输入启动附加参数, 输入减号清空: ', 'set-extra'], '6': ['请输入程序文件名: ', 'set-file'],
+          '7': ['是否需要 Java? 输入 1 或 0: ', 'set-java'], '8': ['是否需要 Node.js? 输入 1 或 0: ', 'set-node'],
+          '9': ['是否需要 Git? 输入 1 或 0: ', 'set-git'], '10': ['请输入端口参数前缀, 输入减号清空: ', 'set-port-arg']
+        };
+        if (value === '0') renderProjectMenu();
+        else if (value.toLowerCase() === 's') {
+          saveConfig(); clear(); add(''); add('[完成] 配置已保存到浏览器本地存储。', 'success'); pause('project');
+        }
+        else if (prompts[value]) { clear(); add(''); setPrompt(prompts[value][0], prompts[value][1]); }
+        else renderModifyMenu();
+      }
+
+      function handlePrompt(value) {
+        if (promptMode?.startsWith('pause:')) { routePause(promptMode.slice(6)); return; }
+        if (promptMode === 'exited') { if (value.toLowerCase() === 'r') renderMain(); return; }
+        if (promptMode === 'delete-config') {
+          if (value.toLowerCase() === 'y') {
+            config = { ...defaults };
+            localStorage.removeItem('cmd-demo-config');
+            add('[完成] 环境配置已删除，模板参数已恢复默认值。', 'success');
+          } else add('[提示] 已取消删除环境配置。', 'warning');
+          pause('project'); return;
+        }
+        if (promptMode === 'custom-port') {
+          if (!validPort(value)) { add('[错误] 端口必须是 1 到 65535 之间的数字。', 'error'); pause('main'); }
+          else deploy(Number(value), false);
+          return;
+        }
+        if (['check-port', 'kill-port', 'firewall-open', 'firewall-close'].includes(promptMode)) {
+          if (!validPort(value)) { add('[错误] 端口无效。', 'error'); pause('port'); return; }
+          const port = Number(value);
+          if (promptMode === 'check-port') add(simulatedOccupied(port) ? `端口 ${port} 已被占用, PID ${port + 1200}。` : `端口 ${port} 可以使用。`, simulatedOccupied(port) ? 'warning' : 'success');
+          if (promptMode === 'kill-port') {
+            const occupied = simulatedOccupied(port);
+            add(occupied ? `[完成] 已模拟结束占用端口 ${port} 的进程。` : `[提示] 端口 ${port} 当前未被占用。`, occupied ? 'success' : 'warning');
+            if (running && port === Number(currentPort)) { running = false; currentPort = currentPid = null; }
+          }
+          if (promptMode === 'firewall-open') add(`[完成] 已模拟添加端口 ${port} 的防火墙放行规则。`, 'success');
+          if (promptMode === 'firewall-close') add(`[完成] 已模拟删除端口 ${port} 的防火墙放行规则。`, 'success');
+          add('（未对本机进行任何更改）', 'dim'); pause('port'); return;
+        }
+        const setters = {
+          'set-project': () => { if (value) config.projectName = value; },
+          'set-default-port': () => { if (validPort(value)) config.defaultPort = Number(value); },
+          'set-command': () => { if (value) config.serverCmd = value; },
+          'set-args': () => { config.serverArgs = value === '-' ? '' : (value || config.serverArgs); },
+          'set-extra': () => { config.extraArgs = value === '-' ? '' : (value || config.extraArgs); },
+          'set-file': () => { if (value) config.programFile = value; },
+          'set-java': () => { if (/^[01]$/.test(value)) config.java = Number(value); },
+          'set-node': () => { if (/^[01]$/.test(value)) config.node = Number(value); },
+          'set-git': () => { if (/^[01]$/.test(value)) config.git = Number(value); },
+          'set-port-arg': () => { config.portArg = value === '-' ? '' : (value || config.portArg); }
+        };
+        if (setters[promptMode]) { setters[promptMode](); renderModifyMenu(); }
+      }
+
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        if (busy) return;
+        const value = input.value.trim();
+        input.value = '';
+        if (promptMode) { handlePrompt(value); return; }
+        if (currentMenu === 'main') handleMain(value);
+        else if (currentMenu === 'port') handlePort(value);
+        else if (currentMenu === 'env') handleEnv(value);
+        else if (currentMenu === 'project') handleProject(value);
+        else if (currentMenu === 'modify') handleModify(value);
+      });
+
+      document.addEventListener('click', () => { if (!input.disabled) input.focus(); });
+      supportButton.addEventListener('click', event => { event.stopPropagation(); supportModal.hidden = false; supportClose.focus(); });
+      supportClose.addEventListener('click', () => { supportModal.hidden = true; input.focus(); });
+      supportModal.addEventListener('click', event => { if (event.target === supportModal) { supportModal.hidden = true; input.focus(); } });
+      document.addEventListener('keydown', event => { if (event.key === 'Escape' && !supportModal.hidden) { supportModal.hidden = true; input.focus(); } });
+      renderMain();
+    })();
+  </script>
+</body>
+</html>
