@@ -1,8 +1,5 @@
 # 一键安装部署启动服务模板
-
-> 版权所有 (c) 2026  
-> 作者：[YU123-ZZZ](https://github.com/YU123-ZZZ)  
-> 吾爱破解：[52pojie 个人主页](https://www.52pojie.cn/home.php?mod=space&uid=2394304)  
+  
 > 最后更新：2026-7-21
 
 一个面向 Windows 的纯 CMD 中文版服务管理模板。它把“检查环境、配置启动命令、处理端口、启动、停止、重启、查看状态”集中到同一个菜单，适合需要反复在本机或局域网环境启动 Java、Node.js、Python 等服务的人。
